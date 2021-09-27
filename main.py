@@ -2,6 +2,7 @@
 import numpy as np
 import argparse
 import cv2
+import imutils
 
 # adding argument and getting the image
 parse = argparse.ArgumentParser()
@@ -11,6 +12,9 @@ args = vars(parse.parse_args())
 # reading the original image
 original = cv2.imread(args['image'])
 
+# resizing the image down for more accurate detection and faster processing
+original = imutils.resize(original, width=600)
+
 # creating a copy for modification
 img = original.copy()
 
@@ -19,7 +23,8 @@ img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # relatively high amount of blurring to avoid text on the document to 
 # mess up the edge detection process
-blurred = cv2.bilateralFilter(img, 11, 17, 17)
+# blurred = cv2.bilateralFilter(img, 11, 17, 17)
+blurred = cv2.GaussianBlur(img, (9, 9), 0)
 # blurred = cv2.medianBlur(img, 9)
 
 # display original and processed image
@@ -27,7 +32,7 @@ cv2.imshow('original', original)
 cv2.imshow('processed for edge detection', blurred)
 
 # canny edge detection
-edged = cv2.Canny(blurred, 50, 200)
+edged = cv2.Canny(blurred, 80, 250)
 cv2.imshow("edges", edged)
 
 # find contours in the image
