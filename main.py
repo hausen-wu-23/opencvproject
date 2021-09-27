@@ -13,9 +13,6 @@ def findDoc(original, edged):
     # only taking the 10 largest one 
     cnts = sorted(cnts, key = cv2.contourArea, reverse=True)
 
-    # copying image for contour drawing
-    cont = original.copy()
-
     # loop through all countours
     for c in cnts:
         # approximate the contour length
@@ -26,8 +23,42 @@ def findDoc(original, edged):
         if len(approx) == 4:
             doc_cnt = approx
             break
+    
+    # returning contour and document contour
+    return doc_cnt
 
-    return (cont, doc_cnt)
+# orders the points in the order of top left, top right, bottom left, bottom right
+# in preparation for warping
+def sort_points(pts):
+    # create a list of cordinates
+    rect = np.zeros((4, 2), dtype='float32')
+
+    # top left point has the smallest sum
+    # bottom right point has the largest sum
+    # top right point has the smallest difference
+    # bottom left point has the largest difference
+    
+    # summing the x and y coordinate
+    s = pts.sum(axis=1)
+
+    # argmin returns the index of the smallest sum
+    # argmax returns the index of the maximum sum
+    rect[0] = pts[np.argmin(s)]
+    rect[2] = pts[np.argmax(s)]
+
+    # getting the diffence of the x and y coordinate
+    d = np.diff(pts, axis=1)
+
+    # argmin returns the index of the smallest difference
+    # argmax returns the index of the maximum difference
+    rect[1] = pts[np.argmin(d)]
+    rect[3] = pts[np.argmax(d)]
+
+    # return the sorted cordinates
+    return rect
+
+def warp(img, pts):
+    pass
 
 def main():
     # adding argument and getting the image
@@ -47,11 +78,8 @@ def main():
     # convert image to grayscale
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # relatively high amount of blurring to avoid text on the document to 
-    # mess up the edge detection process
-    # blurred = cv2.bilateralFilter(img, 11, 17, 17)
+    # blurring image in preparation for processing
     blurred = cv2.GaussianBlur(img, (9, 9), 0)
-    # blurred = cv2.medianBlur(img, 9)
 
     # display original and processed image
     cv2.imshow('original', original)
@@ -61,7 +89,14 @@ def main():
     edged = cv2.Canny(blurred, 80, 250)
     cv2.imshow("edges", edged)
 
-    (cont, doc_cnt) = findDoc(original, edged)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # finding document contour
+    doc_cnt = findDoc(original, edged)
+
+    # copying image for contour drawing
+    cont = original.copy()
 
     # draw contours around the file
     cv2.drawContours(cont, [doc_cnt], -1, (0, 0, 255), 5)
