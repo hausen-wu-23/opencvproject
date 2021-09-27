@@ -19,22 +19,41 @@ img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # relatively high amount of blurring to avoid text on the document to 
 # mess up the edge detection process
-blurred = cv2.GaussianBlur(img, (15, 15), 0)
+blurred = cv2.bilateralFilter(img, 11, 17, 17)
+# blurred = cv2.medianBlur(img, 9)
 
 # display original and processed image
 cv2.imshow('original', original)
 cv2.imshow('processed for edge detection', blurred)
 
 # canny edge detection
-edged = cv2.Canny(blurred, 30, 130)
+edged = cv2.Canny(blurred, 50, 200)
 cv2.imshow("edges", edged)
 
 # find contours in the image
-(cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# using RETR_LIST to find all contours
+(cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+# sort the contours from the largest to smallest
+# only taking the 10 largest one 
+cnts = sorted(cnts, key = cv2.contourArea, reverse=True)
 
 # copying image for contour drawing
 cont = original.copy()
-cv2.drawContours(cont, cnts, -1, (0, 0, 255), 5)
-cv2.imshow('coins', cont)
+
+# loop through all countours
+for c in cnts:
+    # approximate the contour length
+    p = cv2.arcLength(c, True)
+    approx = cv2.approxPolyDP(c, 0.05 * p, True)
+
+    # if 4 points counted, we can copy the contour 
+    if len(approx) == 4:
+        doc_cnt = approx
+        break
+
+# draw contours around the file
+cv2.drawContours(cont, [doc_cnt], -1, (0, 0, 255), 5)
+cv2.imshow('contours', cont)
 
 cv2.waitKey(0)
