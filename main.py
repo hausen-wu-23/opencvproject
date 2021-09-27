@@ -58,7 +58,39 @@ def sort_points(pts):
     return rect
 
 def warp(img, pts):
-    pass
+    rect = sort_points(pts)
+    (tl, tr, br, bl) = rect
+
+
+    # calculate the new maximum width of the new image using the 
+    # largest width of the original image
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    maxWidth = max(int(widthA), int(widthB))
+
+    # calculate the new maximum height of the new image using the 
+    # largest height of the original image
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    maxHeight = max(int(heightA), int(heightB))
+
+    # calculate the new coordiantes of points with new obtained width and height
+    dst = np.array([
+        [0, 0],
+        [maxWidth - 1, 0],
+        [maxWidth - 1, maxHeight - 1],
+        [0, maxHeight - 1]
+    ], 
+    dtype = "float32")
+
+    # calculate the transformation matrix 
+    M = cv2.getPerspectiveTransform(rect, dst)
+
+    # warping using cv2 warp
+    warped = cv2.warpPerspective(img, M, (maxWidth, maxHeight))
+
+    # return the warped image
+    return warped
 
 def main():
     # adding argument and getting the image
@@ -101,6 +133,13 @@ def main():
     # draw contours around the file
     cv2.drawContours(cont, [doc_cnt], -1, (0, 0, 255), 5)
     cv2.imshow('contours', cont)
+
+    # reshape doc_cnts into 4x2 to for warping
+    warped = warp(original.copy(), doc_cnt.reshape(4, 2))
+
+    # fix aspect ratio of document after warping
+    final_img = cv2.resize(warped, (600, 800))
+    cv2.imshow('final', warped)
 
     cv2.waitKey(0)
 
