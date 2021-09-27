@@ -139,7 +139,7 @@ def main():
 
     # fix aspect ratio of document after warping
     final_img = cv2.resize(warped, (600, 800))
-    cv2.imshow('final', warped)
+    cv2.imshow('final', final_img)
 
     cv2.waitKey(0)
 
