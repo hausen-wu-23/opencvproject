@@ -25,4 +25,16 @@ blurred = cv2.GaussianBlur(img, (15, 15), 0)
 cv2.imshow('original', original)
 cv2.imshow('processed for edge detection', blurred)
 
+# canny edge detection
+edged = cv2.Canny(blurred, 30, 130)
+cv2.imshow("edges", edged)
+
+# find contours in the image
+(cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# copying image for contour drawing
+cont = original.copy()
+cv2.drawContours(cont, cnts, -1, (0, 0, 255), 5)
+cv2.imshow('coins', cont)
+
 cv2.waitKey(0)
